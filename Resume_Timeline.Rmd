@@ -10,7 +10,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(flexdashboard)
 library(dplyr)
 library(tidyverse)
@@ -26,6 +26,7 @@ library(ggrepel)
 library(bslib)
 library(lubridate)
 library(DT)
+library(htmltools)
 ```
 
 
@@ -183,21 +184,57 @@ Trainings_df<- Trainings_df %>%
 Projects <- list()
 
 Projects[[length(Projects) + 1]] <- list(
-  start_date = as.Date("2021-02-01"),
-  end_date   = as.Date("2022-06-30"),
-  where_1 = "Wageningen University & Research",
-  where_2 = "Human Nutrition Division",
-  title       = "Elucidating the Role of Human Small Intestine Microbiota in Explaining Differences in Postprandial Glucose Responses (GLYSIMI)",
-  short_title = "Glucose response and small intestinal microbiota",
-  role    = "Investigator (data analysis)")
-
-Projects[[length(Projects) + 1]] <- list(
   start_date = as.Date("2022-07-01"),
   end_date   = Sys.Date(),
   where_1 = "Wageningen University & Research",
   where_2 = "Laboratory of Microbiology",
   title       = "The intestinal microbiota composition and development of preterm infants in early life",
   short_title = "Gut microbiota of preterm infants",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2025-01-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The effect of galacto-oligosaccharides (GOS) or chicory fructo-oligosaccharides (FOS) versus a placebo on bowel habits in children with functional constipation. (INSIDE study)",
+  short_title = "GOS, FOS and contipation in children",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2023-01-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The effect of a 6 weeks intervention with synbiotics on the recovery speed of the gut microbiota after antibiotic treatment in Dutch toddlers (TOBBI study)",
+  short_title = "Microbial recovery after antibiotic treatment",
+  role    = "Co-supervisor (PhD candidate)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2022-07-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "FucoQuest: The impact of fucosylated human milk oligosaccharides on infant gut microbiome, metabolism and gut function",
+  short_title = "2FL enrichment and microbial profile in children",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2023-01-01"),
+  end_date   =as.Date("2024-01-01"),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The effect of a multispecies probiotic on reducing the incidence of antibiotic-associated diarrhoea in children",
+  short_title = "Probiotics and diarrhoea in children",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2021-02-01"),
+  end_date   = as.Date("2022-06-30"),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Human Nutrition Division",
+  title       = "Elucidating the Role of Human Small Intestine Microbiota in Explaining Differences in Postprandial Glucose Responses (GLYSIMI)",
+  short_title = "Glucose response and small intestinal microbiota",
   role    = "Investigator (data analysis)")
 
 Projects[[length(Projects) + 1]] <- list(
@@ -350,11 +387,136 @@ biostatistical_skills_df <- biostatistical_skills_df %>%
 ```
 
 
+```{css}
+.skill-badge {
+  display: inline-block;
+  padding: 10px 16px;
+  margin: 4px;
+  border-radius: 15px;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.green  { background-color: #28a745; }
+.blue   { background-color: #007bff; }
+.orange { background-color: #fd7e14; }
+.purple { background-color: #6f42c1; }
+}
+
+```
+
 Timelines & wordclouds
 ================================
 
+Summary {data-height=200}
+---------------------------------------------------------------------------------------
 
-Education & Experience
+### Years of experience {data-width=250}
+
+```{r experience_years}
+years_of_experience<- round(as.numeric(time_length(interval((Education_df %>% filter(role == "PhD") %>% pull(start_date)),Sys.Date()), "years")), 1)
+
+valueBox(years_of_experience, caption = "Years of Experience",
+         icon = "fa-business-time", color = "info")
+```
+
+### Years analysing data {data-width=250}
+
+```{r percentage_data_analysis}
+years_of_experience_data<- round(as.numeric(time_length(interval((Experience_df %>% filter(where_2 == "Human Nutrition Division") %>% pull(start_date)),Sys.Date()), "years")), 1)
+
+percentage_years_data_analist<- round(years_of_experience_data * 100 / years_of_experience,0)
+
+gauge(value = percentage_years_data_analist,
+    min = 0,
+    max = 100,
+    label = "% analysing data")
+```
+
+### Analyzed Clinical & Omics Datasets {data-width=250}
+
+```{r datasets_analyzed}
+valueBox("30+", caption = "Analyzed Clinical & Omics Datasets",
+         icon = "fa-database", color = "primary")
+```
+
+### Analyzed samples {data-width=250}
+
+```{r samples_analyzed}
+valueBox("5000+", caption = "Analyzed samples",
+         icon = "fa-chart-bar", color = "primary")
+```
+
+Core expertise & skills {data-height=100 .tabset}
+--------------------------------------------------
+
+### Core expertise
+
+```{r core expertise}
+div(
+  style = "padding:10px;",
+
+  span("Human Nutrition", class = "skill-badge green"),
+  span("Clinical Research", class = "skill-badge green"),
+  span("Dietary Assessment", class = "skill-badge green"),
+
+  span("Gut Microbiome", class = "skill-badge orange"),
+
+  span("Multi-Omics", class = "skill-badge purple"),
+
+  span("Biostatistics", class = "skill-badge blue")
+)
+```
+
+### Study designs
+
+```{r Study designs, echo=FALSE}
+div(
+  style = "padding:10px;",
+  
+  span("Observational studies (cross-sectional, cohort, case-control)", class = "skill-badge green"),
+  span("Human intervention studies", class = "skill-badge green"),
+  span("RCTs", class = "skill-badge green"),
+  span("pragmatic clinical studies", class = "skill-badge green"))
+
+```
+
+### Dataset expertise
+
+```{r Dataset expertise, echo=FALSE}
+div(
+  style = "padding:10px;",
+  
+  span("Clinical and nutritional", class = "skill-badge green"),
+  span("Dietary intake and anthropometric data", class = "skill-badge green"),
+  span("Gut microbiome data (16S rRNA sequencing, shotgun metagenomics, functional profiling)", class = "skill-badge orange"),
+  span("proteomics and metaproteomics datasets", class = "skill-badge purple"),
+  span("continuous glucose monitoring (CGM)", class = "skill-badge green"),
+  span("longitudinal and compositional", class = "skill-badge purple")
+)
+
+```
+
+### Statistical methods
+
+```{r Statistical methods, echo=FALSE}
+div(
+  style = "padding:10px;",
+  
+  span("Linear and logistic regression", class = "skill-badge blue"),
+  span("mixed-effects modelling", class = "skill-badge blue"),
+  span("multivariate analysis", class = "skill-badge blue"),
+  span("longitudinal data analysis", class = "skill-badge blue"),
+  span("confounding adjustment", class = "skill-badge blue"),
+  span("multiple testing correction", class = "skill-badge blue"),
+  span("power/sample size considerations", class = "skill-badge blue")
+)
+
+```
+
+
+Education & Experience {data-height=600}
 --------------------------------------------------
 
 ### Education & Experience timeline {data-width=600}
@@ -418,7 +580,7 @@ word_counts_Ed_Exp %>% filter(n>1) %>%
 
 ```
 
-Projects
+Projects {data-height=900}
 --------------------------------------------------
 
 ### Projects timeline {data-width=600}
@@ -470,9 +632,10 @@ word_counts_Projects <- Projects_df %>%
 ## monochromatic color palette based on https://icolorpalette.com/color/fd7446 (based on one of the colors from simpsons palette)
 
 word_counts_Projects %>% filter(n>1) %>%
+  filter(!word %in% c("university", "poznań", "wageningen")) %>% # this needs to be topic centered and university and city is not relevant
   ggplot(aes(label = word, size = n, color = n)) +
   scale_size_area(max_size = 15)+
-  geom_text_wordcloud() +
+  geom_text_wordcloud(shape = "diamond") +
   scale_color_gradient(low = "#4A1301", high = "#FD7446FF")+
   theme_bw()+
   theme(panel.border = element_blank())
@@ -509,7 +672,7 @@ ggplotly(timeline_trainings, tooltip = "text", height = 700) %>%
   layout(legend = list(
       orientation = "h",
       x = 0.5,
-      y = -0.3,
+      y = -0.2,
       yref = "paper",
       xanchor = "center",
       yanchor = "top"),
@@ -541,10 +704,10 @@ word_counts_Trainings %>% filter(n>1) %>%
 ```
 
 
-Skills {data-height=700}
+Skills {data-height=650}
 ---------------------------------------------------------------------------------------
 
-### Biostatistical skills timeline {data-width=500}
+### Biostatistical skills timeline {data-width=600}
 
 ```{r biostatistical skills timeline, echo=FALSE}
 timeline_biostatistical_skills<- ggplot(biostatistical_skills_df, aes(y = skill)) +
@@ -565,33 +728,38 @@ timeline_biostatistical_skills<- ggplot(biostatistical_skills_df, aes(y = skill)
     legend.position = "bottom") +
   coord_cartesian(clip = "off")
 
-ggplotly(timeline_biostatistical_skills, height = 700) %>%
+ggplotly(timeline_biostatistical_skills, height = 600) %>%
   layout(
     legend = list(
       orientation = "h",
       x = 0.5,
-      y = -0.5,
+      y = -0.2,
       yref = "paper",
       xanchor = "center",
       yanchor = "top"
     ),
-    margin = list(r = 70, b = 50))
+    margin = list(r = 70, b = 60))
 
 
 ```
 
-### Other skills {data-width=250}
+### Language skills {data-width=400}
 
-```{r barplot, echo=FALSE}
+```{r language, echo=FALSE}
+
+div(style = "margin-bottom: 100px;",
+    gauge(100, min = 0, max = 100, label = "Polish, native")
+)
+
+div(style = "margin-bottom: 100px;",
+    gauge(85, min = 0, max = 100, label = "English, C1")
+)
+
+div(style = "margin-bottom: 100px;",
+    gauge(45, min = 0, max = 100, label = "Dutch, B1")
+)
 
 ```
-
-### Skills wordcloud {data-width=250}
-
-```{r wordcloud skills, echo=FALSE}
-
-```
-
 
 
 # Data
