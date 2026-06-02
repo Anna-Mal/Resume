@@ -1,0 +1,968 @@
+---
+title: "CV Anna Malinowska"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+    theme: 
+      version: 3
+      bootswatch: flatly
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(flexdashboard)
+library(dplyr)
+library(tidyverse)
+library(stringr)
+library(tm)
+library(tidytext)
+library(wordcloud)
+library(ggwordcloud)
+library(ggplot2)
+library(plotly)
+library(ggsci)
+library(ggrepel)
+library(bslib)
+library(lubridate)
+library(DT)
+library(htmltools)
+library(shiny)
+```
+
+
+```{r CV data preparation, include=FALSE}
+# First I need to rewrite my CV into a dataframe which will be possible to plot later on
+# Each part of CV is created row by row, so it will be easy do add next experience, skills etc. in the future
+## Preparing Experience data frame
+
+Experience <- list()
+
+Experience[[length(Experience) + 1]] <- list(
+  start_date = as.Date("2023-07-01"),
+  end_date   = as.Date(Sys.Date()),
+  where_1       = "Wageningen University & Research",
+  where_2 = "UNLOCK",
+  role    = "Postdoctoral Researcher")
+
+Experience[[length(Experience) + 1]] <- list(
+  start_date = as.Date("2022-07-01"),
+  end_date   = as.Date(Sys.Date()),
+  where_1       = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  role    = "Postdoctoral Researcher")
+
+Experience[[length(Experience) + 1]] <- list(
+  start_date = as.Date("2020-06-01"),
+  end_date   = as.Date("2022-06-01"),
+  where_1       = "Wageningen University & Research",
+  where_2 = "Human Nutrition Division",
+  role    = "Postdoctoral Researcher")
+
+Experience[[length(Experience) + 1]] <- list(
+  start_date = as.Date("2013-10-01"),
+  end_date   = as.Date("2022-09-30"),
+  where_1       = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  role    = "Assistant Professor")
+
+Experience[[length(Experience) + 1]] <- list(
+  start_date = as.Date("2013-05-01"),
+  end_date   = as.Date("2013-07-31"),
+  where_1       = "Biofarm LLC",
+  where_2 = "Research and Development",
+  role    = "Senior medical documentation specialist")
+
+Experience_df <- bind_rows(Experience) %>%
+  mutate(role_wrapped = str_wrap(role, width = 18),
+         where_1_wrapped = str_wrap(where_1, width = 18),
+         where_2_wrapped = str_wrap(where_2, width = 18)) %>%
+  arrange(start_date) %>%
+  mutate(where_1 = factor(where_1, levels = unique(where_1)))
+ 
+
+## Preparing Education data frame
+Education <- list()
+
+Education[[length(Education) + 1]] <- list(
+  start_date = as.Date("2008-10-01"),
+  end_date   = as.Date("2013-09-01"),
+  where_1       = "Poznań University of Life Sciences",
+  where_2 = "Faculty of Food Science and Nutrition",
+  role    = "PhD")
+
+Education[[length(Education) + 1]] <- list(
+  start_date = as.Date("2003-10-01"),
+  end_date   = as.Date("2008-07-01"),
+  where_1       = "Poznań University of Life Sciences",
+  where_2 = "Faculty of Food Science and Nutrition",
+  role    = "MSc")
+
+Education_df <- bind_rows(Education) %>%
+  mutate(role_wrapped = str_wrap(role, width = 18),
+         where_1_wrapped = str_wrap(where_1, width = 18),
+         where_2_wrapped = str_wrap(where_2, width = 18)) %>%
+  arrange(start_date) %>%
+  mutate(where_1 = factor(where_1, levels = unique(where_1)))
+
+## Combinig Education and Experience data frame
+Education_Experience_df <- Education_df %>% mutate(type = "Education") %>%
+  bind_rows(Experience_df %>% mutate(type = "Experience"))
+
+## Preparing Trainings data frame
+Trainings <- list()
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2022-06-13"),
+  end_date   = as.Date("2022-07-04"),
+  where_1       = "Wageningen University & Research",
+  where_2       = "Graduate School VLAG ",
+  title    = "Scientific Artwork\nwith Adobe Illustrator",
+  type = "other",
+  key_outcomes = "drawing, designing figures and infographics in Adobe Illustrator")
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2020-10-27"),
+  end_date   = as.Date("2020-10-29"),
+  where_1       = "Wageningen University & Research",
+  where_2       = "Graduate School VLAG ",
+  title    = "Applied Statistics",
+  type = "analytical",
+  key_outcomes = "basic analyses in R, sample size, comparing meand and medians")
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2020-10-13"),
+  end_date   = as.Date("2020-10-15"),
+  where_1       = "Wageningen University & Research",
+  where_2       = "Graduate School VLAG ",
+  title    = "Chemometrics",
+  type = "analytical",
+  key_outcomes = "multivariate analysis in R, modelling, regression, clustering")
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2019-03-01"),
+  end_date   = as.Date("2020-09-01"),
+  where_1       = "Poznań University of Life Sciences",
+  where_2       = "Support and development Center",
+  title    = "Academic teaching training",
+  type = "pedagogical",
+  key_outcomes = "creating and composing infographics and slides, sketchnoting, problem-solving teaching, blended learning, using social media in the teaching process")
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2019-11-14"),
+  end_date   = as.Date("2019-12-15"),
+  where_1       = "Poznań University of Life Sciences",
+  where_2       = "Collegium Wratislaviense",
+  title    = "Academic tutors school",
+  type = "pedagogical",
+  key_outcomes = "mentoring, tutoring")
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2012-04-01"),
+  end_date   = as.Date("2012-06-30"),
+  where_1       = "Danone Research",
+  where_2       = "Centre for Specialised Nutrition",
+  title    = "Erasmus scholarship",
+  type = "nutritional",
+  key_outcomes = "Performing laboratory analysis, analysis of scientific literature concerning the impact of fetal and early childhood nutrition on the susceptibility to obesity and metabolic diseases in adulthood")
+
+Trainings[[length(Trainings) + 1]] <- list(
+  start_date = as.Date("2008-07-01"),
+  end_date   = as.Date("2008-09-15"),
+  where_1       = "Nestle",
+  where_2       = "Call Centre",
+  title    = "Internship",
+  type = "nutritional",
+  key_outcomes = "Phone consulting in the field of child and infant nutrition")
+
+Trainings_df <- bind_rows(Trainings)
+
+Trainings_df<- Trainings_df %>%
+  mutate(where_1 = paste0("<b>", where_1, "</b>")) %>%
+   mutate(where_1_wrapped = str_wrap(where_1, width = 18),
+          title_wrapped = str_wrap(title, width = 25)) %>%
+  arrange(start_date) %>%
+  mutate(where_1 = factor(where_1, levels = unique(where_1)))
+
+## Preparing Projects data frame
+
+Projects <- list()
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2022-07-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The intestinal microbiota composition and development of preterm infants in early life",
+  short_title = "Gut microbiota of preterm infants",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2025-01-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The effect of galacto-oligosaccharides (GOS) or chicory fructo-oligosaccharides (FOS) versus a placebo on bowel habits in children with functional constipation. (INSIDE study)",
+  short_title = "GOS, FOS and contipation in children",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2023-01-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The effect of a 6 weeks intervention with synbiotics on the recovery speed of the gut microbiota after antibiotic treatment in Dutch toddlers (TOBBI study)",
+  short_title = "Microbial recovery after antibiotic treatment",
+  role    = "Co-supervisor (PhD candidate)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2022-07-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "FucoQuest: The impact of fucosylated human milk oligosaccharides on infant gut microbiome, metabolism and gut function",
+  short_title = "2FL enrichment and microbial profile in children",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2023-01-01"),
+  end_date   =as.Date("2024-01-01"),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  title       = "The effect of a multispecies probiotic on reducing the incidence of antibiotic-associated diarrhoea in children",
+  short_title = "Probiotics and diarrhoea in children",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2021-02-01"),
+  end_date   = as.Date("2022-06-30"),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Human Nutrition Division",
+  title       = "Elucidating the Role of Human Small Intestine Microbiota in Explaining Differences in Postprandial Glucose Responses (GLYSIMI)",
+  short_title = "Glucose response and small intestinal microbiota",
+  role    = "Investigator (data analysis)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2016-03-01"),
+  end_date   = as.Date("2020-03-01"),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  title       = "Gut microbiota as the link between dietary patterns and human metabolism",
+  short_title = "Dietary patterns and gut microbiota",
+  role    = "Principal Investigator")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2017-03-01"),
+  end_date   = as.Date("2022-09-01"),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  title       = "Influence of maternal choline intake and non-alcoholic fatty liver disease during pregnancy and lactation on endocrine pancreas development in the offspring",
+  short_title = "Metabolic programming by maternal choline intake and NAFLD",
+  role    = "Investigator (biochemical analyses)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2015-08-01"),
+  end_date   = as.Date("2019-02-01"),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  title       = "Relationships between fat discrimination, frequency of eating high-fat foods, and gene polymorphism - determination of body weight and lipid metabolism",
+  short_title = "Fat taste project",
+  role    = "Investigator (biochemical and nutritional analyses)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2015-08-01"),
+  end_date   = as.Date("2019-02-01"),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  title       = "Assessment of choline intake and choline metabolism in pregnant women",
+  short_title = "Choline in pregnant women",
+  role    = "Investigator (nutritional analyses)")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2014-01-01"),
+  end_date   = as.Date("2014-12-31"),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  title       = "Relationship between choline gut metabolism and cardiovascular diseases",
+  short_title = "Choline and CVDs",
+  role    = "Principal Investigator")
+
+Projects[[length(Projects) + 1]] <- list(
+  start_date = as.Date("2013-01-01"),
+  end_date   = as.Date("2013-12-31"),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  title       = "Genetic determinants of homocysteine metabolism",
+  short_title = "Homocysteine metabolism",
+  role    = "Principal Investigator")
+
+Projects_df <- bind_rows(Projects) %>% 
+  mutate(role_wrapped = str_wrap(role, width = 18)) %>%
+  mutate(where_1_wrapped = str_wrap(where_1, width = 18)) %>%
+  arrange(start_date) %>%
+  mutate(where_1 = factor(where_1, levels = unique(where_1))) %>%
+  mutate(title_wrapped = str_wrap(title, width = 18))
+
+## Preparing Skills data frame
+biostatistical_skills <- list()
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2019-09-16"),
+  end_date   = Sys.Date(),
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  software       = "Statistica",
+  skill    = "regression analysis")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2019-12-12"),
+  end_date   = Sys.Date(),
+  software       = "Statistica",
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  skill    = "multivariate analyses")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2020-01-16"),
+  end_date   = Sys.Date(),
+  software       = "Statistica",
+  where_1 = "Poznań University of Life Sciences",
+  where_2 = "Department of Human Nutrition and Dietetics",
+  skill    = "basic statistical analyses (comparing means, medians)")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2020-10-01"),
+  end_date   = Sys.Date(),
+  software       = "R",
+  where_1 = "Wageningen University & Research",
+  where_2 = "Human Nutrition Division",
+  skill    = "data wrangling, reshaping, visualizations with ggplot2")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2021-06-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Human Nutrition Division",
+  software       = "R",
+  skill    = "microbiome analysis with phyloseq, microViz, vegan etc")
+
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2021-06-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Human Nutrition Division",
+  software       = "Linux",
+  skill    = "PICRUSt 2.0")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2022-07-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  software       = "Linux",
+  skill    = "16S sequencing data analysis with NG-Tax 2.0")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2023-06-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  software       = "R",
+  skill    = "proteomic analysis")
+
+biostatistical_skills[[length(biostatistical_skills) + 1]] <- list(
+  start_date = as.Date("2024-01-01"),
+  end_date   = Sys.Date(),
+  where_1 = "Wageningen University & Research",
+  where_2 = "Laboratory of Microbiology",
+  software       = "Linux",
+  skill    = "bash scripting, Metaphlan, HUMAnN, cutadapt, Megahit")
+
+
+biostatistical_skills_df <- bind_rows(biostatistical_skills)
+
+biostatistical_skills_df <- biostatistical_skills_df %>% 
+  mutate(skill_wrapped = str_wrap(skill, width = 18)) %>%
+  mutate(where_1_wrapped = str_wrap(where_1, width = 30)) %>%
+  arrange(start_date) %>%
+  mutate(where_1_wrapped = factor(where_1_wrapped, levels = rev(unique(where_1_wrapped)))) %>%
+  mutate(label_x = start_date + months(6))
+
+```
+
+
+```{css}
+.skill-badge {
+  display: inline-block;
+  padding: 8px 14px;
+  margin: 4px;
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.green  { background-color: #28a745; }
+.blue   { background-color: #007bff; }
+.orange { background-color: #fd7e14; }
+.purple { background-color: #6f42c1; }
+}
+
+```
+
+
+```{r functions}
+get_edu_exp <- function(input) {
+
+  start_filter <- as.Date(paste0(input$year_range[1], "-01-01"))
+  end_filter   <- as.Date(paste0(input$year_range[2], "-12-31"))
+
+  edu_exp <- Education_Experience_df[
+    Education_Experience_df$end_date >= start_filter &
+    Education_Experience_df$start_date <= end_filter,
+  ]
+
+  edu_exp
+}
+
+
+get_project <- function(input) {
+
+  start_filter <- as.Date(paste0(input$year_range[1], "-01-01"))
+  end_filter   <- as.Date(paste0(input$year_range[2], "-12-31"))
+
+  project <- Projects_df[
+    Projects_df$end_date >= start_filter &
+    Projects_df$start_date <= end_filter,
+  ]
+
+  project
+}
+
+
+get_train <- function(input) {
+
+  start_filter <- as.Date(paste0(input$year_range[1], "-01-01"))
+  end_filter   <- as.Date(paste0(input$year_range[2], "-12-31"))
+
+  train <- Trainings_df[
+    Trainings_df$end_date >= start_filter &
+    Trainings_df$start_date <= end_filter,
+  ]
+
+  train
+}
+
+get_skill <- function(input) {
+
+  start_filter <- as.Date(paste0(input$year_range[1], "-01-01"))
+  end_filter   <- as.Date(paste0(input$year_range[2], "-12-31"))
+
+  skill <- biostatistical_skills_df[
+    biostatistical_skills_df$end_date >= start_filter &
+    biostatistical_skills_df$start_date <= end_filter,
+  ]
+
+  skill
+}
+
+
+
+```
+
+
+Sidebar {.sidebar}
+=====================================
+
+```{r sidebar}
+sliderInput(
+  "year_range",
+  "Select years:",
+  min = 2003,
+  max = 2026,
+  value = c(2003, 2026),
+  sep = ""
+)
+
+selectInput(
+  "word_min",
+  "Minimum word frequency for wordcloud:",
+  choices = setNames(1:5, paste0("≥ ", 1:5)),
+  selected = 2
+)
+```
+
+
+
+Timelines & wordclouds
+================================
+
+Summary {data-height=200}
+---------------------------------------------------------------------------------------
+
+### Years of experience {data-width=250}
+
+```{r experience_years}
+years_of_experience<- round(as.numeric(time_length(interval((Education_df %>% filter(role == "PhD") %>% pull(start_date)),Sys.Date()), "years")), 1)
+
+valueBox(years_of_experience, caption = "Years of Experience",
+         icon = "fa-business-time", color = "info")
+```
+
+### Years analysing data {data-width=250}
+
+```{r percentage_data_analysis}
+years_of_experience_data<- round(as.numeric(time_length(interval((Experience_df %>% filter(where_2 == "Human Nutrition Division") %>% pull(start_date)),Sys.Date()), "years")), 1)
+
+percentage_years_data_analist<- round(years_of_experience_data * 100 / years_of_experience,0)
+
+gauge(value = percentage_years_data_analist,
+    min = 0,
+    max = 100,
+    label = "% analysing data")
+```
+
+### Analyzed Clinical & Omics Datasets {data-width=250}
+
+```{r datasets_analyzed}
+valueBox("30+", caption = "Analyzed Clinical & Omics Datasets",
+         icon = "fa-database", color = "primary")
+```
+
+### Analyzed samples {data-width=250}
+
+```{r samples_analyzed}
+valueBox("5000+", caption = "Analyzed samples",
+         icon = "fa-chart-bar", color = "primary")
+```
+
+Core expertise & skills {data-height=150 .tabset}
+--------------------------------------------------
+
+### Core expertise
+
+```{r core expertise}
+div(
+  style = "padding:10px;",
+
+  span("Human Nutrition", class = "skill-badge green"),
+  span("Clinical Research", class = "skill-badge green"),
+  span("Dietary Assessment", class = "skill-badge green"),
+
+  span("Gut Microbiome", class = "skill-badge orange"),
+
+  span("Multi-Omics", class = "skill-badge purple"),
+
+  span("Biostatistics", class = "skill-badge blue")
+)
+```
+
+### Study designs
+
+```{r Study designs, echo=FALSE}
+div(
+  style = "padding:10px;",
+  
+  span("Observational studies (cross-sectional, cohort, case-control)", class = "skill-badge green"),
+  span("Human intervention studies", class = "skill-badge green"),
+  span("RCTs", class = "skill-badge green"),
+  span("pragmatic clinical studies", class = "skill-badge green"))
+
+```
+
+### Dataset expertise
+
+```{r Dataset expertise, echo=FALSE}
+div(
+  style = "padding:10px;",
+  
+  span("Clinical and nutritional", class = "skill-badge green"),
+  span("Dietary intake and anthropometric data", class = "skill-badge green"),
+  span("Gut microbiome data (16S rRNA sequencing, shotgun metagenomics, functional profiling)", class = "skill-badge orange"),
+  span("proteomics and metaproteomics datasets", class = "skill-badge purple"),
+  span("continuous glucose monitoring (CGM)", class = "skill-badge green"),
+  span("longitudinal and compositional", class = "skill-badge purple")
+)
+
+```
+
+### Statistical methods
+
+```{r Statistical methods, echo=FALSE}
+div(
+  style = "padding:10px;",
+  
+  span("Linear and logistic regression", class = "skill-badge blue"),
+  span("mixed-effects modelling", class = "skill-badge blue"),
+  span("multivariate analysis", class = "skill-badge blue"),
+  span("longitudinal data analysis", class = "skill-badge blue"),
+  span("confounding adjustment", class = "skill-badge blue"),
+  span("multiple testing correction", class = "skill-badge blue"),
+  span("power/sample size considerations", class = "skill-badge blue")
+)
+
+```
+
+
+Education & Experience {data-height=600}
+--------------------------------------------------
+
+### Education & Experience timeline {data-width=600}
+
+```{r main timeline, echo=FALSE}
+
+renderPlotly({
+
+  req(input$year_range)
+
+  edu_exp <- get_edu_exp(input)
+  
+  main_timeline <- ggplot(edu_exp, aes(y = where_2_wrapped)) +
+  geom_segment(aes(x = start_date, xend = end_date, yend = where_2_wrapped), color = "gray25", alpha = 0.4, linewidth = 7) +
+  geom_point(aes(x = start_date, fill = role_wrapped), shape = 21, size = 8) +
+  geom_point(aes(x = end_date, fill = role_wrapped), shape = 21, size = 6)+
+facet_grid(rows = vars(where_1_wrapped), scales = "free")+
+  scale_fill_nejm(name = "Position")+
+  guides(fill = guide_legend(override.aes = list(size = 4)))+
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 10),
+    legend.position = "bottom") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  coord_cartesian(clip = "off")
+
+  ggplotly(main_timeline)%>%
+  layout(
+    legend = list(
+      orientation = "h",
+      x = 0.5,
+      y = -0.3,
+      yref = "paper",
+      xanchor = "center",
+      yanchor = "top"
+    ),
+    margin = list(l = 70, r = 70, b = 150)
+  )
+})
+
+
+```
+
+### Wordcloud {data-width=400}
+
+```{r main wordcloud, echo=FALSE}
+
+renderPlot({
+
+  req(input$year_range)
+
+  edu_exp <- get_edu_exp(input)
+
+  word_counts <- edu_exp %>% select(-type) %>%
+    mutate(text = paste(where_1, where_2, role, sep = " ")) %>%
+    unnest_tokens(word, text) %>%
+    filter(!word %in% stopwords("en")) %>%
+    count(word, sort = TRUE)
+
+  word_counts %>%
+    filter(n >= as.numeric(input$word_min)) %>%
+    ggplot(aes(label = word, size = n, color = n)) +
+    geom_text_wordcloud() +
+    scale_size_area(max_size = 20) +
+    scale_color_gradient(low = "#071F12", high = "#20854E") +
+    theme_minimal()
+
+})
+
+```
+
+Projects {data-height=900}
+--------------------------------------------------
+
+### Projects timeline {data-width=600}
+
+```{r projects timeline, echo=FALSE}
+
+renderPlotly({
+
+  req(input$year_range)
+
+  project <- get_project(input)
+
+
+timeline_projects<- ggplot(project, aes(y = title_wrapped)) +
+  geom_segment(aes(x = start_date, xend = end_date, yend = title_wrapped), color = "gray45", alpha = 0.4, linewidth = 7) +
+  geom_point(aes(x = start_date, color = role_wrapped, text = title), size = 8) +
+  geom_point(aes(x = end_date, color = role_wrapped, text = title), size = 6) +
+  geom_text(aes(x = start_date + months(6), label = short_title), size = 3, hjust = 0)+
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  facet_grid(rows = vars(where_1_wrapped), scales = "free")+
+  scale_color_simpsons(name = "Role in\n project")+
+  guides(color = guide_legend(override.aes = list(size = 4)))+
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 10),
+    axis.text.y = element_blank(),
+    legend.position = "bottom") +
+  coord_cartesian(clip = "off")
+
+ggplotly(timeline_projects, tooltip = "text") %>%
+  layout(
+    legend = list(
+      orientation = "h",
+      x = 0.5,
+      y = -0.5,
+      yref = "paper",
+      xanchor = "center",
+      yanchor = "top"
+    ),
+    margin = list(l = 70, r = 70, b = 150))
+})
+
+```
+
+### Wordcloud {data-width=400}
+
+```{r projects wordcloud, echo=FALSE}
+
+renderPlot({
+
+  req(input$year_range)
+
+  project <- get_project(input)
+
+
+word_counts_Projects <- project %>%
+  dplyr::mutate(text = paste(where_1, where_2, title, short_title, sep = " ")) %>%
+  unnest_tokens(word, text) %>%
+  filter(!word %in% stopwords("en")) %>%
+  count(word, sort = TRUE)
+
+
+## monochromatic color palette based on https://icolorpalette.com/color/fd7446 (based on one of the colors from simpsons palette)
+
+word_counts_Projects %>% filter(n >= 1) %>%
+  filter(!word %in% c("university", "poznań", "wageningen")) %>% # this needs to be topic centered and university and city is not relevant
+  filter(n >= as.numeric(input$word_min)) %>%
+  ggplot(aes(label = word, size = n, color = n)) +
+  scale_size_area(max_size = 15)+
+  geom_text_wordcloud(shape = "diamond") +
+  scale_color_gradient(low = "#4A1301", high = "#FD7446FF")+
+  theme_bw()+
+  theme(panel.border = element_blank())
+
+})
+```
+
+
+Trainings {data-height=700}
+---------------------------------------------------------------------------------------
+
+### Trainings timeline {data-width=600}
+
+```{r trainings timeline, echo=FALSE}
+
+renderPlotly({
+
+  req(input$year_range)
+
+  train <- get_train(input)
+
+timeline_trainings<- ggplot(train, aes(y = title_wrapped)) +
+  geom_segment(aes(x = start_date, xend = end_date, yend = title_wrapped), color = "gray45", alpha = 0.6, linewidth = 4) +
+  geom_point(aes(x = start_date, fill = type, text = key_outcomes), shape = 23, alpha = 0.7, size = 3) +
+  geom_point(aes(x = end_date, fill = type, text = key_outcomes), shape = 23, size = 3) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  facet_wrap(~ where_1, ncol = 1, scales = "free_y")+
+  scale_fill_jco(name = "Training type")+
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 10),
+    strip.text = element_text(face = "bold", size =12),
+    legend.position = "bottom") +
+  coord_cartesian(clip = "off")
+
+
+ggplotly(timeline_trainings, tooltip = "text", height = 700) %>%
+  layout(legend = list(
+      orientation = "h",
+      x = 0.5,
+      y = -0.2,
+      yref = "paper",
+      xanchor = "center",
+      yanchor = "top"),
+    margin = list(l = 170, r = 70, b = 150))
+
+})
+
+```
+
+### Wordcloud {data-width=400}
+
+```{r trainings wordcloud, echo=FALSE}
+
+renderPlot({
+
+  req(input$year_range)
+
+train <- get_train(input)
+
+word_counts_Trainings <- train %>%
+  dplyr::mutate(text = paste(title, type, key_outcomes, sep = " ")) %>%
+  unnest_tokens(word, text) %>%
+  filter(!word %in% stopwords("en")) %>%
+  count(word, sort = TRUE)
+
+
+## monochromatic color palette based on https://icolorpalette.com/color/0073c2 (based on one of the colors from jco palette)
+
+word_counts_Trainings %>%
+  filter(n >= as.numeric(input$word_min)) %>%
+  ggplot(aes(label = word, size = n, color = n)) +
+  scale_size_area(max_size = 15)+
+  geom_text_wordcloud() +
+  scale_color_gradient(low = "#001B2D", high = "#0073c2")+
+  theme_bw()+
+  theme(panel.border = element_blank())
+
+})
+```
+
+
+Skills {data-height=650}
+---------------------------------------------------------------------------------------
+
+### Biostatistical skills timeline {data-width=600}
+
+```{r biostatistical skills timeline, echo=FALSE}
+
+renderPlotly({
+
+  skill <- get_skill(input)
+
+timeline_biostatistical_skills<- ggplot(skill, aes(y = skill)) +
+  geom_segment(aes(x = start_date, xend = end_date, yend = skill), color = "gray45", alpha = 0.4, linewidth = 8) +
+  geom_point(aes(x = start_date, fill = software), shape = 21, size = 8) +
+  geom_text(aes(x = start_date + months(6), label = skill), size = 3, hjust = 0, nudge_x = 500)+
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  facet_grid(rows = vars(where_1_wrapped), scales = "free")+
+  scale_fill_frontiers()+
+  guides(color = guide_legend(override.aes = list(size = 4)))+
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 10),
+    axis.text.y = element_blank(),
+    strip.text = element_text(size =12),
+    legend.position = "bottom") +
+  coord_cartesian(clip = "off")
+
+ggplotly(timeline_biostatistical_skills, height = 600) %>%
+  layout(
+    legend = list(
+      orientation = "h",
+      x = 0.5,
+      y = -0.2,
+      yref = "paper",
+      xanchor = "center",
+      yanchor = "top"
+    ),
+    margin = list(r = 70, b = 60))
+
+})
+
+```
+
+### Language skills {data-width=400}
+
+```{r language, echo=FALSE}
+
+div(style = "margin-bottom: 100px;",
+    gauge(100, min = 0, max = 100, label = "Polish, native")
+)
+
+div(style = "margin-bottom: 100px;",
+    gauge(85, min = 0, max = 100, label = "English, C1")
+)
+
+div(style = "margin-bottom: 100px;",
+    gauge(45, min = 0, max = 100, label = "Dutch, B1")
+)
+
+```
+
+
+# Data
+
+## Sections {.tabset}
+
+### Education & Experience
+
+```{r Education Experience data, echo=FALSE}
+
+renderDataTable({
+
+  req(input$year_range)
+
+  edu_exp <- get_edu_exp(input)
+  
+  edu_exp
+})
+
+```
+
+### Projects
+
+```{r Projects data, echo=FALSE}
+
+renderDataTable({
+
+  req(input$year_range)
+
+  project <- get_project(input)
+  
+  project
+})
+
+```
+
+### Trainings
+
+```{r Trainings data, echo=FALSE}
+
+renderDataTable({
+
+  req(input$year_range)
+
+  train <- get_train(input)
+  
+  train
+})
+
+```
+
+### Skills
+
+```{r Skills data, echo=FALSE}
+
+renderDataTable({
+
+  req(input$year_range)
+
+  skill <- get_skill(input)
+  
+  skill
+})
+
+```
